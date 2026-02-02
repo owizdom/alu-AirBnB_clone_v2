@@ -11,8 +11,7 @@ This repository contains the second iteration of the AirBnB clone project. It ex
 
 ## Command Interpreter (console)
 
-The command interpreter (CLI) lets you create, read, update and delete objects stored either in `file.json` (FileStorage)
-or in MySQL (DBStorage).
+The command interpreter (CLI) lets you create, read, update and delete objects stored either in `file.json` (FileStorage) or in MySQL (DBStorage).
 
 ### How to start
 

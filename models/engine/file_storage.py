@@ -35,7 +35,8 @@ class FileStorage:
             cls = FileStorage.classes.get(cls)
         if cls is None:
             return {}
-        return {k: v for k, v in FileStorage.__objects.items() if isinstance(v, cls)}
+        return {k: v for k, v in FileStorage.__objects.items()
+                if isinstance(v, cls)}
 
     def new(self, obj):
         """Add new object to storage dictionary"""

@@ -1,18 +1,23 @@
 #!/usr/bin/python3
 """BaseModel module"""
 import uuid
-from datetime import datetime
+from datetime import datetime, timezone
 from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy import Column, String, DateTime
 
 Base = declarative_base()
 
 
+def _utc_now():
+    """Current UTC time (timezone-aware)."""
+    return datetime.now(timezone.utc)
+
+
 class BaseModel:
     """Base class for all models"""
     id = Column(String(60), primary_key=True, nullable=False)
-    created_at = Column(DateTime, nullable=False, default=datetime.utcnow)
-    updated_at = Column(DateTime, nullable=False, default=datetime.utcnow)
+    created_at = Column(DateTime, nullable=False, default=_utc_now)
+    updated_at = Column(DateTime, nullable=False, default=_utc_now)
 
     def __init__(self, *args, **kwargs):
         """Instantiate a new model"""
@@ -21,27 +26,27 @@ class BaseModel:
                 if k == "__class__":
                     continue
                 if k in ("created_at", "updated_at") and isinstance(v, str):
-                    setattr(self, k, datetime.fromisoformat(v))
-                else:
-                    setattr(self, k, v)
-            if not getattr(self, "id", None):
-                self.id = str(uuid.uuid4())
-            if not getattr(self, "created_at", None):
-                self.created_at = datetime.utcnow()
-            if not getattr(self, "updated_at", None):
-                self.updated_at = datetime.utcnow()
+                    v = datetime.fromisoformat(v)
+                object.__setattr__(self, k, v)
+            if "id" not in self.__dict__:
+                object.__setattr__(self, "id", str(uuid.uuid4()))
+            if "created_at" not in self.__dict__:
+                object.__setattr__(self, "created_at", _utc_now())
+            if "updated_at" not in self.__dict__:
+                object.__setattr__(self, "updated_at", _utc_now())
         else:
-            self.id = str(uuid.uuid4())
-            self.created_at = datetime.utcnow()
-            self.updated_at = datetime.utcnow()
+            object.__setattr__(self, "id", str(uuid.uuid4()))
+            object.__setattr__(self, "created_at", _utc_now())
+            object.__setattr__(self, "updated_at", _utc_now())
 
     def __str__(self):
-        return "[{}] ({}) {}".format(self.__class__.__name__, self.id, self.__dict__)
+        return "[{}] ({}) {}".format(
+            self.__class__.__name__, self.id, self.__dict__)
 
     def save(self):
         """Updates updated_at and saves the instance to storage"""
         from models import storage
-        self.updated_at = datetime.utcnow()
+        self.updated_at = _utc_now()
         storage.new(self)
         storage.save()
 

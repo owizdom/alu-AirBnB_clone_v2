@@ -1,7 +1,6 @@
 #!/usr/bin/python3
 """HBNB console"""
 import cmd
-import shlex
 import re
 
 from models import storage
@@ -22,6 +21,31 @@ classes = {
     "Place": Place,
     "Review": Review
 }
+
+
+def _split_create_arg(arg):
+    """Split arg by spaces but keep quoted substrings as one token."""
+    tokens = []
+    i = 0
+    while i < len(arg):
+        while i < len(arg) and arg[i] in " \t":
+            i += 1
+        if i >= len(arg):
+            break
+        if arg[i] == '"':
+            start = i
+            i += 1
+            while i < len(arg) and (arg[i] != '"' or (i > 0 and arg[i - 1] == '\\')):
+                i += 1
+            if i < len(arg):
+                i += 1
+            tokens.append(arg[start:i])
+        else:
+            start = i
+            while i < len(arg) and arg[i] not in " \t":
+                i += 1
+            tokens.append(arg[start:i])
+    return tokens
 
 
 def _parse_kv(token):
@@ -70,7 +94,7 @@ class HBNBCommand(cmd.Cmd):
         return True
 
     def do_create(self, arg):
-        tokens = shlex.split(arg)
+        tokens = _split_create_arg(arg)
         if len(tokens) == 0:
             print("** class name missing **")
             return

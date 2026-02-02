@@ -19,4 +19,5 @@ class State(BaseModel, Base):
             """Return list of City instances with state_id == self.id"""
             from models import storage
             from models.city import City
-            return [c for c in storage.all(City).values() if c.state_id == self.id]
+            return [c for c in storage.all(City).values()
+                    if c.state_id == self.id]

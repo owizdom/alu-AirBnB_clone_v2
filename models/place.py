@@ -9,13 +9,15 @@ from models.base_model import BaseModel, Base
 place_amenity = Table(
     "place_amenity",
     Base.metadata,
-    Column("place_id", String(60), ForeignKey("places.id"), primary_key=True, nullable=False),
-    Column("amenity_id", String(60), ForeignKey("amenities.id"), primary_key=True, nullable=False),
+    Column("place_id", String(60), ForeignKey("places.id"),
+           primary_key=True, nullable=False),
+    Column("amenity_id", String(60), ForeignKey("amenities.id"),
+           primary_key=True, nullable=False),
 )
 
 
 class _PlaceAmenityList:
-    """Proxy list so place.amenities.append(amenity) adds amenity.id to place.amenity_ids."""
+    """Proxy: place.amenities.append(amenity) adds amenity.id to list."""
 
     def __init__(self, place):
         self._place = place
@@ -29,7 +31,8 @@ class _PlaceAmenityList:
 
     def append(self, amenity):
         from models.amenity import Amenity
-        if isinstance(amenity, Amenity) and amenity.id not in self._place.amenity_ids:
+        if (isinstance(amenity, Amenity) and
+                amenity.id not in self._place.amenity_ids):
             self._place.amenity_ids.append(amenity.id)
 
 
@@ -49,8 +52,11 @@ class Place(BaseModel, Base):
     longitude = Column(Float, nullable=True)
 
     if os.getenv("HBNB_TYPE_STORAGE") == "db":
-        reviews = relationship("Review", backref="place", cascade="all, delete")
-        amenities = relationship("Amenity", secondary=place_amenity, viewonly=False, back_populates="place_amenities")
+        reviews = relationship(
+            "Review", backref="place", cascade="all, delete")
+        amenities = relationship(
+            "Amenity", secondary=place_amenity, viewonly=False,
+            back_populates="place_amenities")
     else:
         def __init__(self, *args, **kwargs):
             super().__init__(*args, **kwargs)
@@ -60,7 +66,8 @@ class Place(BaseModel, Base):
         def reviews(self):
             from models import storage
             from models.review import Review
-            return [r for r in storage.all(Review).values() if r.place_id == self.id]
+            return [r for r in storage.all(Review).values()
+                    if r.place_id == self.id]
 
         @property
         def amenities(self):
