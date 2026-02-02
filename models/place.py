@@ -14,6 +14,25 @@ place_amenity = Table(
 )
 
 
+class _PlaceAmenityList:
+    """Proxy list so place.amenities.append(amenity) adds amenity.id to place.amenity_ids."""
+
+    def __init__(self, place):
+        self._place = place
+
+    def __iter__(self):
+        from models import storage
+        from models.amenity import Amenity
+        for a in storage.all(Amenity).values():
+            if a.id in self._place.amenity_ids:
+                yield a
+
+    def append(self, amenity):
+        from models.amenity import Amenity
+        if isinstance(amenity, Amenity) and amenity.id not in self._place.amenity_ids:
+            self._place.amenity_ids.append(amenity.id)
+
+
 class Place(BaseModel, Base):
     """Place class"""
     __tablename__ = "places"
@@ -29,12 +48,14 @@ class Place(BaseModel, Base):
     latitude = Column(Float, nullable=True)
     longitude = Column(Float, nullable=True)
 
-    amenity_ids = []
-
     if os.getenv("HBNB_TYPE_STORAGE") == "db":
         reviews = relationship("Review", backref="place", cascade="all, delete")
         amenities = relationship("Amenity", secondary=place_amenity, viewonly=False, back_populates="place_amenities")
     else:
+        def __init__(self, *args, **kwargs):
+            super().__init__(*args, **kwargs)
+            self.amenity_ids = list(getattr(self, "amenity_ids", []))
+
         @property
         def reviews(self):
             from models import storage
@@ -43,13 +64,10 @@ class Place(BaseModel, Base):
 
         @property
         def amenities(self):
-            from models import storage
-            from models.amenity import Amenity
-            return [a for a in storage.all(Amenity).values() if a.id in self.amenity_ids]
+            return _PlaceAmenityList(self)
 
         @amenities.setter
         def amenities(self, obj):
             from models.amenity import Amenity
-            if isinstance(obj, Amenity):
-                if obj.id not in self.amenity_ids:
-                    self.amenity_ids.append(obj.id)
+            if isinstance(obj, Amenity) and obj.id not in self.amenity_ids:
+                self.amenity_ids.append(obj.id)

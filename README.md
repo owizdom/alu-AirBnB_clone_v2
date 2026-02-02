@@ -1,5 +1,7 @@
 # alu-AirBnB_clone_v2
 
+Fork maintained by [owizdom](https://github.com/owizdom/alu-AirBnB_clone_v2).
+
 This repository contains the second iteration of the AirBnB clone project. It extends the original console and models by:
 - adding a database storage engine using SQLAlchemy (DBStorage)
 - keeping support for JSON file storage (FileStorage) via an environment switch

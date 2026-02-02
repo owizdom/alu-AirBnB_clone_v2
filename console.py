@@ -92,8 +92,106 @@ class HBNBCommand(cmd.Cmd):
         obj.save()
         print(obj.id)
 
-    # NOTE: other commands are expected to exist in the original codebase.
-    # This patch focuses on task 2 (do_create improvements).
+    def do_all(self, arg):
+        """Print all objects, optionally filtered by class."""
+        tokens = shlex.split(arg)
+        if len(tokens) == 0:
+            objs = storage.all()
+        else:
+            class_name = tokens[0]
+            cls = classes.get(class_name)
+            if cls is None:
+                print("** class doesn't exist **")
+                return
+            objs = storage.all(cls)
+        print([str(v) for v in objs.values()])
+
+    def do_show(self, arg):
+        """Show an instance by class name and id."""
+        tokens = shlex.split(arg)
+        if len(tokens) == 0:
+            print("** class name missing **")
+            return
+        class_name = tokens[0]
+        cls = classes.get(class_name)
+        if cls is None:
+            print("** class doesn't exist **")
+            return
+        if len(tokens) < 2:
+            print("** instance id missing **")
+            return
+        obj_id = tokens[1]
+        key = "{}.{}".format(class_name, obj_id)
+        objs = storage.all(cls)
+        if key not in objs:
+            print("** no instance found **")
+            return
+        print(objs[key])
+
+    def do_destroy(self, arg):
+        """Destroy an instance by class name and id."""
+        tokens = shlex.split(arg)
+        if len(tokens) == 0:
+            print("** class name missing **")
+            return
+        class_name = tokens[0]
+        cls = classes.get(class_name)
+        if cls is None:
+            print("** class doesn't exist **")
+            return
+        if len(tokens) < 2:
+            print("** instance id missing **")
+            return
+        obj_id = tokens[1]
+        key = "{}.{}".format(class_name, obj_id)
+        objs = storage.all(cls)
+        if key not in objs:
+            print("** no instance found **")
+            return
+        obj = objs[key]
+        storage.delete(obj)
+        storage.save()
+        print()
+
+    def do_update(self, arg):
+        """Update an instance by class name, id, attribute name and value."""
+        tokens = shlex.split(arg)
+        if len(tokens) == 0:
+            print("** class name missing **")
+            return
+        class_name = tokens[0]
+        cls = classes.get(class_name)
+        if cls is None:
+            print("** class doesn't exist **")
+            return
+        if len(tokens) < 2:
+            print("** instance id missing **")
+            return
+        obj_id = tokens[1]
+        key = "{}.{}".format(class_name, obj_id)
+        objs = storage.all(cls)
+        if key not in objs:
+            print("** no instance found **")
+            return
+        if len(tokens) < 3:
+            print("** attribute name missing **")
+            return
+        if len(tokens) < 4:
+            print("** value missing **")
+            return
+        attr_name = tokens[2]
+        attr_value = tokens[3]
+        if attr_name in ("id", "created_at", "updated_at"):
+            return
+        obj = objs[key]
+        try:
+            setattr(obj, attr_name, int(attr_value))
+        except ValueError:
+            try:
+                setattr(obj, attr_name, float(attr_value))
+            except ValueError:
+                setattr(obj, attr_name, attr_value.strip('"'))
+        obj.save()
 
 
 if __name__ == "__main__":
